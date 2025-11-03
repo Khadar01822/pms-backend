@@ -14,7 +14,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // local dev (Vite)
-      "https://pms-frontend.onrender.com", // ✅ your Render frontend URL (update after deploy)
+      "https://pms-frontend.onrender.com", // ✅ your Render frontend URL
     ],
     credentials: true,
   })
@@ -50,14 +50,20 @@ const __dirname1 = path.resolve();
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname1, "/client/dist")));
 
-  app.get("*", (req, res) =>
-    res.sendFile(path.resolve(__dirname1, "client", "dist", "index.html"))
-  );
+  // ✅ Fallback for SPA routes (Render-safe)
+  app.use((req, res) => {
+    res.sendFile(path.join(__dirname1, "client", "dist", "index.html"));
+  });
 } else {
   app.get("/", (req, res) => {
     res.send("PMS API is running...");
   });
 }
+
+// ✅ Handle unknown API routes
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
