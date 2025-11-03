@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
-const path = require("path");
 
 dotenv.config();
 const app = express();
@@ -13,8 +12,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://pms-frontend.onrender.com", // update when frontend deploys
+      "http://localhost:5173", // local frontend
+      "https://pms-frontend.onrender.com", // deployed frontend
     ],
     credentials: true,
   })
@@ -24,10 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // ✅ MongoDB connection
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
@@ -44,21 +40,10 @@ app.use("/api/apartments", apartmentsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentsRoutes);
 
-// ✅ Serve frontend (for production)
-const __dirname1 = path.resolve();
-
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname1, "/client/dist")));
-
-  // ✅ This is the FIX (no more app.get('*', …))
-  app.use((req, res) => {
-    res.sendFile(path.join(__dirname1, "client", "dist", "index.html"));
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.send("PMS API is running...");
-  });
-}
+// ✅ Root route (for Render and local)
+app.get("/", (req, res) => {
+  res.send("✅ PMS Backend API is live and running successfully!");
+});
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
