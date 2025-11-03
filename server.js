@@ -60,10 +60,11 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// ✅ Handle unknown API routes
+// ✅ Fallback for SPA routes (Render-safe)
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+  res.sendFile(path.join(__dirname1, "client", "dist", "index.html"));
 });
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
