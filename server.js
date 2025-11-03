@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // local frontend
-      "https://pms-frontend.onrender.com", // deployed frontend
+      "https://pms-frontend-ztfs.onrender.com", // deployed frontend URL
     ],
     credentials: true,
   })
