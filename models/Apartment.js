@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const apartmentSchema = new mongoose.Schema(
   {
-    unit: { type: String, required: true, unique: true }, // e.g. "1-A"
-    floor: { type: Number, required: true },              // 1,2,3
-    rent: { type: Number, required: true },               // default 50000
+    unit: { type: String, required: true, unique: true },
+    floor: { type: Number, default: 1 },
+    rent: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ["vacant", "occupied", "inactive"],
