@@ -8,7 +8,7 @@ router.post("/", ctrl.create);
 router.put("/:id", ctrl.update);
 router.delete("/:id", ctrl.remove);
 
-// ✅ Add this route
-router.put("/:id/tenant", ctrl.addTenantToApartment);
+// Add tenant to apartment
+router.post("/:id/tenant", ctrl.addTenantToApartment);
 
 module.exports = router;

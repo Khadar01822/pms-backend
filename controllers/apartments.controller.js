@@ -23,26 +23,17 @@ const getOne = asyncHandler(async (req, res) => {
 // CREATE apartment
 // ==========================
 const create = asyncHandler(async (req, res) => {
-  let { unit, floor, rent, status } = req.body;
+  const { unit, floor, rent, status } = req.body;
 
-  if (!unit) {
-    return res.status(400).json({ message: "Unit is required" });
-  }
+  if (!unit || !floor) return res.status(400).json({ message: "Unit & floor are required" });
 
-  // ✅ Default missing values
-  if (!floor && floor !== 0) floor = 1;
-  if (!rent && rent !== 0) rent = 0;
-
-  // Prevent duplicate
   const exists = await Apartment.findOne({ unit });
-  if (exists) {
-    return res.status(400).json({ message: "Apartment unit already exists" });
-  }
+  if (exists) return res.status(400).json({ message: "Apartment unit already exists" });
 
   const created = await Apartment.create({
     unit,
     floor,
-    rent,
+    rent: rent ?? 0,
     status: status ?? "vacant",
   });
 
@@ -61,10 +52,7 @@ const update = asyncHandler(async (req, res) => {
     if (req.body[key] !== undefined) apt[key] = req.body[key];
   });
 
-  // If tenant is modified, auto update status
-  if (req.body.tenant !== undefined) {
-    apt.status = req.body.tenant ? "occupied" : "vacant";
-  }
+  if (req.body.tenant !== undefined) apt.status = req.body.tenant ? "occupied" : "vacant";
 
   await apt.save();
   const updated = await Apartment.findById(apt._id).populate("tenant");
@@ -78,10 +66,7 @@ const remove = asyncHandler(async (req, res) => {
   const apt = await Apartment.findById(req.params.id);
   if (!apt) return res.status(404).json({ message: "Apartment not found" });
 
-  if (apt.tenant) {
-    await Tenant.deleteOne({ _id: apt.tenant });
-  }
-
+  if (apt.tenant) await Tenant.deleteOne({ _id: apt.tenant });
   await Apartment.deleteOne({ _id: apt._id });
   res.json({ message: "Apartment removed successfully" });
 });
@@ -93,17 +78,15 @@ const addTenantToApartment = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, phone, email, idNumber, moveInDate } = req.body;
 
-  console.log("🟢 Received tenant add request:", id, req.body);
-
   const apartment = await Apartment.findById(id);
-  if (!apartment) {
-    return res.status(404).json({ message: "Apartment not found" });
-  }
+  if (!apartment) return res.status(404).json({ message: "Apartment not found" });
 
+  // If already occupied, prevent adding another tenant
   if (apartment.status === "occupied" && apartment.tenant) {
     return res.status(400).json({ message: "This unit is already occupied" });
   }
 
+  // Create tenant
   const tenant = await Tenant.create({
     name,
     phone,
@@ -114,17 +97,14 @@ const addTenantToApartment = asyncHandler(async (req, res) => {
     rentStatus: "unpaid",
   });
 
+  // Link tenant to apartment
   apartment.tenant = tenant._id;
   apartment.status = "occupied";
   apartment.rent = apartment.rent || 50000;
   await apartment.save();
 
   const updated = await Apartment.findById(id).populate("tenant");
-  res.status(200).json({
-    message: "Tenant successfully added",
-    apartment: updated,
-    tenant,
-  });
+  res.status(200).json({ message: "Tenant successfully added", apartment: updated, tenant });
 });
 
 module.exports = {
